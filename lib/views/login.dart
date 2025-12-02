@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_ui/views/signup.dart';
-import 'package:form_field_validator/form_field_validator.dart';
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -30,38 +29,49 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
   bool _obscurePassword = true;
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-List users = [];
+  List users = [];
   final String baseUrl = 'http://localhost/bb88_api';
-  Future<void> _fetchUsers() async {
-    try {
-      var url = Uri.parse("$baseUrl/get_users.php");
-      final response = await http
-          .get(url)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              log('get_users request timed out');
-              throw Exception('Connection timeout');
-            },
-          );
-      if (!mounted) return;
-      if (response.statusCode == 200) {
+
+  Future<void> _loginUser() async {
+  try {
+    var url = Uri.parse("$baseUrl/login_user.php");
+    final response = await http.post(
+      url,
+      body: {
+        "username": _usernameController.text,
+        "password": _passwordController.text,
+      },
+    ).timeout(const Duration(seconds: 5));
+
+    if (!mounted) return;
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      if (data['success'] == true) {
         setState(() {
-          users = json.decode(response.body);
+          var currentUser = data['user'];
         });
+        log("Login successful: ${data['user']}");
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
-        log("failed to load users: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Login failed')),
+        );
       }
-    } catch (e) {
-      log('Error fetching users: $e');
+    } else {
+      log("Failed to login: ${response.statusCode}");
     }
+  } catch (e) {
+    log("Error logging in: $e");
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -106,11 +116,7 @@ List users = [];
                             children: [
                               TextFormField(
                                 controller: _usernameController,
-                                validator: MultiValidator([
-                                  RequiredValidator(
-                                    errorText: 'Please enter username',
-                                  ),
-                                ]).call,
+
                                 decoration: InputDecoration(
                                   contentPadding: EdgeInsets.all(16),
                                   border: OutlineInputBorder(),
@@ -126,11 +132,7 @@ List users = [];
                               TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
-                                validator: MultiValidator([
-                                  RequiredValidator(
-                                    errorText: 'Please enter password',
-                                  ),
-                                ]).call,
+
                                 decoration: InputDecoration(
                                   contentPadding: EdgeInsets.all(16),
                                   border: OutlineInputBorder(),
@@ -155,9 +157,7 @@ List users = [];
                             width: 150,
                             child: ElevatedButton(
                               onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  log('Login attempt with username: ${_usernameController.text}');
-                                }
+                                _loginUser();
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.yellowAccent,
