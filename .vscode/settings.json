@@ -1,0 +1,6 @@
+{
+    "cmake.ignoreCMakeListsMissing": true,
+    "yaml.schemas": {
+        "https://www.schemastore.org/pubspec.json": "file:///Users/jerneybryantm.macayanan/Documents/Codes/Flutter/flutter_auth_ui/pubspec.yaml"
+    }
+}
