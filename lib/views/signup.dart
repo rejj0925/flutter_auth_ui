@@ -96,6 +96,7 @@ class _SignupPageState extends State<SignupPage> {
         );
         _usernameController.clear();
         _passwordController.clear();
+        Navigator.pushReplacementNamed(context, '/login');
       } else {
         log('failed to insert user: ${response.statusCode} ${response.body}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -137,7 +138,12 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 204, 204, 204).withValues(alpha: 0.5),
+                  color: const Color.fromARGB(
+                    255,
+                    204,
+                    204,
+                    204,
+                  ).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 margin: EdgeInsets.all(16),
