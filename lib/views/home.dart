@@ -31,6 +31,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = ModalRoute.of(context)!.settings.arguments as String?;
+    
     return Scaffold(
       body: Container(
         color: Colors.green,
@@ -40,7 +42,7 @@ class _HomePageState extends State<HomePage> {
             spacing: 16,
             children: [
               Text(
-                "Welcome to the Home Page",
+                "Welcome to the Home Page, ${currentUser ?? 'Guest'}!",
                 style: TextStyle(fontSize: 30),
                 textAlign: TextAlign.center,
               ),

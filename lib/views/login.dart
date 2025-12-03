@@ -38,40 +38,43 @@ class _LoginPageState extends State<LoginPage> {
   final String baseUrl = 'http://localhost/bb88_api';
 
   Future<void> _loginUser() async {
-  try {
-    var url = Uri.parse("$baseUrl/login_user.php");
-    final response = await http.post(
-      url,
-      body: {
-        "username": _usernameController.text,
-        "password": _passwordController.text,
-      },
-    ).timeout(const Duration(seconds: 5));
+    try {
+      var url = Uri.parse("$baseUrl/login_user.php");
+      final response = await http
+          .post(
+            url,
+            body: {
+              "username": _usernameController.text,
+              "password": _passwordController.text,
+            },
+          )
+          .timeout(const Duration(seconds: 5));
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
 
-      if (data['success'] == true) {
-        setState(() {
-          var currentUser = data['user'];
-        });
-        log("Login successful: ${data['user']}");
-        Navigator.pushReplacementNamed(context, '/home');
+        if (data['success'] == true) {
+          var currentUser = data['user']['username'];
+          log("Login successful: $currentUser");
+          Navigator.pushReplacementNamed(
+            context,
+            '/home',
+            arguments: currentUser,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Login failed')),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Login failed')),
-        );
+        log("Failed to login: ${response.statusCode}");
       }
-    } else {
-      log("Failed to login: ${response.statusCode}");
+    } catch (e) {
+      log("Error logging in: $e");
     }
-  } catch (e) {
-    log("Error logging in: $e");
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: const Color.fromARGB(255, 204, 204, 204).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 margin: EdgeInsets.all(16),

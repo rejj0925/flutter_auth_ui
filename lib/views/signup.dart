@@ -137,7 +137,7 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white70.withValues(alpha: 0.6),
+                  color: const Color.fromARGB(255, 204, 204, 204).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 margin: EdgeInsets.all(16),
