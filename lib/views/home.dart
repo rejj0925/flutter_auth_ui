@@ -1,8 +1,5 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_auth_ui/controllers/controller.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,31 +25,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final controller = Controller();
   List users = [];
-  final String baseUrl = 'http://localhost/bb88_api';
+
   Future<void> _fetchUsers() async {
-    try {
-      var url = Uri.parse("$baseUrl/get_users.php");
-      final response = await http
-          .get(url)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              log('get_users request timed out');
-              throw Exception('Connection timeout');
-            },
-          );
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        setState(() {
-          users = json.decode(response.body);
-        });
-      } else {
-        log("failed to load users: ${response.statusCode}");
-      }
-    } catch (e) {
-      log('Error fetching users: $e');
-    }
+    final fetched = await controller.fetchUsers();
+    setState(() {
+      users = fetched;
+    });
   }
 
   @override
@@ -76,26 +56,45 @@ class _HomePageState extends State<HomePage> {
         actions: [
           Padding(
             padding: const EdgeInsets.all(1),
-            child: IconButton(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                  (Route<dynamic> route) => false,
-                );
-              },
-              icon: const Icon(Icons.logout_rounded),
-              style: IconButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: const Color.fromARGB(255, 47, 111, 49),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(10),
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: _fetchUsers,
+                  icon: const Icon(Icons.refresh_rounded),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color.fromARGB(255, 47, 111, 49),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (Route<dynamic> route) => false,
+                    );
+                  },
+                  icon: const Icon(Icons.logout_rounded),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color.fromARGB(255, 47, 111, 49),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -123,14 +122,31 @@ class _HomePageState extends State<HomePage> {
                               minWidth: constraints.maxWidth,
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadiusGeometry.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                              borderRadius: BorderRadiusGeometry.vertical(
+                                top: Radius.circular(12),
+                                bottom: Radius.circular(12),
+                              ),
                               child: DataTable(
                                 headingRowColor: WidgetStateProperty.all(
                                   Colors.lightGreen.shade100,
                                 ),
                                 columns: const [
-                                  DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold),)),
-                                  DataColumn(label: Text("Username", style: TextStyle(fontWeight: FontWeight.bold),)),
+                                  DataColumn(
+                                    label: Text(
+                                      "ID",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  DataColumn(
+                                    label: Text(
+                                      "Username",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                                 rows: users.map((user) {
                                   return DataRow(

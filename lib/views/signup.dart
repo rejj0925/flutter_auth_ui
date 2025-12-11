@@ -1,8 +1,6 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_auth_ui/controllers/controller.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -32,93 +30,19 @@ class _SignupPageState extends State<SignupPage> {
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final controller = Controller();
 
-  List users = [];
-  final String baseUrl = 'http://localhost/bb88_api';
-  Future<void> _fetchUsers() async {
-    try {
-      var url = Uri.parse("$baseUrl/get_users.php");
-      final response = await http
-          .get(url)
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              log('get_users request timed out');
-              throw Exception('Connection timeout');
-            },
-          );
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        setState(() {
-          users = json.decode(response.body);
-        });
-      } else {
-        log("failed to load users: ${response.statusCode}");
-      }
-    } catch (e) {
-      log('Error fetching users: $e');
-    }
-  }
 
   Future<void> _insertUser() async {
-    try {
-      if (_usernameController.text.isEmpty ||
-          _passwordController.text.isEmpty) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Username and password are required')),
-        );
-        return;
-      }
-
-      var url = Uri.parse("$baseUrl/insert_user.php");
-      final response = await http
-          .post(
-            url,
-            body: {
-              'username': _usernameController.text,
-              'password': _passwordController.text,
-            },
-          )
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              log('insert_user request timed out');
-              throw Exception('Connection timeout');
-            },
-          );
-
+      var isSuccess = await controller.insertUser(
+        _usernameController,
+        _passwordController,
+      );
       if (!mounted) return;
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'User registered')),
-        );
-        _usernameController.clear();
-        _passwordController.clear();
+      if (isSuccess == true) {
         Navigator.pushReplacementNamed(context, '/login');
-      } else {
-        log('failed to insert user: ${response.statusCode} ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to register user: ${response.statusCode}'),
-          ),
-        );
       }
-    } catch (e) {
-      log('Error inserting user: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUsers();
-  }
+    }    
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +129,7 @@ class _SignupPageState extends State<SignupPage> {
                             ],
                           ),
                           SizedBox(
-                            width: 200,
+                            width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () {
                                 _insertUser();
@@ -215,6 +139,8 @@ class _SignupPageState extends State<SignupPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
+                                shadowColor: Colors.black,
+                                elevation: 10
                               ),
                               child: Text(
                                 'Sign Up',

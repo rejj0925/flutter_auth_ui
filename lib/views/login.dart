@@ -1,9 +1,6 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_auth_ui/views/signup.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_auth_ui/controllers/controller.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,49 +27,18 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
-
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  List users = [];
-  final String baseUrl = 'http://localhost/bb88_api';
+  final controller = Controller();
 
   Future<void> _loginUser() async {
-    try {
-      var url = Uri.parse("$baseUrl/login_user.php");
-      final response = await http
-          .post(
-            url,
-            body: {
-              "username": _usernameController.text,
-              "password": _passwordController.text,
-            },
-          )
-          .timeout(const Duration(seconds: 5));
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['success'] == true) {
-          var currentUser = data['user']['username'];
-          log("Login successful: $currentUser");
-          Navigator.pushReplacementNamed(
-            context,
-            '/home',
-            arguments: currentUser,
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'] ?? 'Login failed')),
-          );
-        }
-      } else {
-        log("Failed to login: ${response.statusCode}");
-      }
-    } catch (e) {
-      log("Error logging in: $e");
+    var isSuccess = await controller.loginUser(
+      _usernameController,
+      _passwordController,
+    );
+    if (!mounted) return;
+    if (isSuccess == true) {
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 
@@ -94,7 +60,12 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 204, 204, 204).withValues(alpha: 0.5),
+                  color: const Color.fromARGB(
+                    255,
+                    204,
+                    204,
+                    204,
+                  ).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 margin: EdgeInsets.all(16),
@@ -157,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                             ],
                           ),
                           SizedBox(
-                            width: 150,
+                            width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () {
                                 _loginUser();
@@ -167,6 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
+                                shadowColor: Colors.black,
+                                elevation: 10
                               ),
                               child: Text(
                                 'Login',
